@@ -44,31 +44,31 @@ static ssize_t idaapi unflatten_callback(void *, hexrays_event_t event, va_list 
 	return 0;
 }
 
-//--------------------------------------------------------------------------
-int idaapi init(void)
-{
-	if (!init_hexrays_plugin())
+//IDA plugin exports
+plugmod_t* _stdcall IDAP_init( void ) {
+
+	if ( !init_hexrays_plugin() )
 	{
-		msg("no decompiler");
+		msg( "no decompiler" );
 		return PLUGIN_SKIP; // no decompiler
 	}
-	const char *hxver = get_hexrays_version();
-	msg("Hex-rays version %s has been detected, %s ready to use\n", hxver, PLUGIN.wanted_name);
+	const char* hxver = get_hexrays_version();
+	msg( "Hex-rays version %s has been detected, %s ready to use\n", hxver, PLUGIN.wanted_name );
 
 	// Install our block and instruction optimization classes.
 #if DO_OPTIMIZATION
-	install_optinsn_handler(&hook);
-	install_optblock_handler(&cfu);
-	#if USE_HEXRAYS_CALLBACK
-		install_hexrays_callback(unflatten_callback, NULL);
-	#endif
+	install_optinsn_handler( &hook );
+	install_optblock_handler( &cfu );
+#if USE_HEXRAYS_CALLBACK
+	install_hexrays_callback( unflatten_callback, NULL );
+#endif
 #endif
 	return PLUGIN_KEEP;
 }
 
 //--------------------------------------------------------------------------
-void idaapi term(void)
-{
+void _stdcall IDAP_term( void ) {
+
 	if (hexdsp != NULL)
 	{
 
@@ -91,8 +91,8 @@ void idaapi term(void)
 }
 
 //--------------------------------------------------------------------------
-bool idaapi run(size_t arg)
-{
+bool _stdcall IDAP_run( size_t arg ) {
+
 	if (arg == 0xbeef)
 	{
 		PLUGIN.flags |= PLUGIN_UNL;
@@ -127,23 +127,14 @@ bool idaapi run(size_t arg)
 //--------------------------------------------------------------------------
 static const char comment[] = "Show microcode";
 
-
 //--------------------------------------------------------------------------
 //
 //      PLUGIN DESCRIPTION BLOCK
 //
 //--------------------------------------------------------------------------
-plugin_t PLUGIN =
-{
-	IDP_INTERFACE_VERSION,
-	0,                    // plugin flags
-	init,                 // initialize
-	term,                 // terminate. this pointer may be NULL.
-	run,                  // invoke plugin
-	comment,              // long comment about the plugin
-						  // it could appear in the status line
-						  // or as a hint
-	"",                   // multiline help about the plugin
-	"HexRaysDeob", // the preferred short name of the plugin
-	""                    // the preferred hotkey to run the plugin
-};
+
+const char* IDAP_hotkey = "";
+const char* IDAP_name = "HexRaysDeob";
+const char* IDAP_help = "";
+const char* IDAP_comment = "Hex-Rays microcode API plugin for breaking an obfuscating compiler";
+plugin_t PLUGIN = { IDP_INTERFACE_VERSION, 0, IDAP_init, IDAP_term, IDAP_run, IDAP_comment, IDAP_help, IDAP_name, IDAP_hotkey };
